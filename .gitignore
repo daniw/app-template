@@ -14,3 +14,6 @@
 /build
 /oscar
 /.config
+
+# temporary editor files
+*.swp

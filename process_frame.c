@@ -17,8 +17,9 @@
 const int nc = OSC_CAM_MAX_IMAGE_WIDTH/2;
 const int nr = OSC_CAM_MAX_IMAGE_HEIGHT/2;
 
-int TextColor;
+void CalcDeriv(void);
 
+int TextColor;
 
 void ResetProcess()
 {
@@ -59,8 +60,28 @@ void ProcessFrame()
 		DrawBoundingBox(80, 100, 110, 120, true, BLUE);
 		DrawString(200, 200, strlen(Text), TINY, TextColor, Text);
 	}
+    CalcDeriv();
 }
 
+void CalcDeriv(void)
+{
+    int c, r;
 
+    for(r = nc; r < nr*nc-nc; r+= nc) {/* we skip the first and last line */
+        for(c = 1; c < nc-1; c++) {
+            /* do pointer arithmetics with respect to center pixel location */
+            unsigned char* p = &data.u8TempImage[SENSORIMG][r+c];
+
+            /* implement Sobel filter */
+            int dx = -(int) *(p-nc-1) + (int) *(p-nc+1)
+                -2* (int) *(p-1) + 2* (int) *(p+1)
+                -(int) *(p+nc-1) + (int) *(p+nc+1);
+            int dy = (int) *(p-nc-1) + 2 * (int) *(p-nc) + (int) *(p-nc+1) -
+                    (int) *(p+nc-1) - 2 * (int) *(p+nc) - (int) *(p+nc+1);
+            data.u8TempImage[BACKGROUND][r+c] = (uint8) MIN(255, MAX(0, 128+dx));
+            data.u8TempImage[THRESHOLD][r+c] = (uint8) MIN(255, MAX(0, 128+dy));
+        }
+    }
+}
 
 
