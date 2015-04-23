@@ -34,8 +34,7 @@ void MarkCorner(void);
 
 const int nc = OSC_CAM_MAX_IMAGE_WIDTH/2;
 const int nr = OSC_CAM_MAX_IMAGE_HEIGHT/2;
-const uint8 GaussFilter[] = {1, 4, 11, 27, 50, 72, 82};
-//const uint8 GaussFilter[] = {82, 72, 50, 27, 11, 4, 1};
+const uint8 GaussFilter[] = {82, 72, 50, 27, 11, 4, 1};
 const uint8 BinFilter[] = {128, 64, 64, 32, 8, 4, 1};
 
 int TextColor;
@@ -159,17 +158,10 @@ void AvgDeriv(int Index) {
     for (r = nc; r < nr*nc-nc; r += nc) {
         for (c = (BORDER + 1); c < nc - (BORDER + 1); c++) {
             int* p = &avgDxy[Index][r+c];
-            int sx =  ((*(p-6) + *(p+6)))
-                + ((*(p-5) + *(p+5)) << 2)
-                + ((*(p-4) + *(p+4)) << 3)
-                + ((*(p-3) + *(p+3)) << 5)
-                + ((*(p-2) + *(p+2)) << 6)
-                + ((*(p-1) + *(p+1)) << 6)
-                + ((*p << 7));
-            //int sx = (*p)*GaussFilter[0];
-            //for (int i = 1; i < sizeof(FILTER); i++) {
-            //    sx += ((*p - i) + (*p + i)) * FILTER[i];
-            //}
+            int sx = (*p)*GaussFilter[0];
+            for (int i = 1; i < sizeof(FILTER); i++) {
+                sx += ((*(p - i)) + (*(p + i))) * FILTER[i];
+            }
             helpBuf[r+c] = (sx >> 8);
         }
     }
@@ -178,17 +170,10 @@ void AvgDeriv(int Index) {
     for (r = nc; r < nr*nc-nc; r += nc) {
         for (c = (BORDER + 1); c < nc - (BORDER + 1); c++) {
             int* p = &helpBuf[r+c];
-            int sy =  ((*(p-6*nc) + *(p+6*nc)))
-                + ((*(p-5*nc) + *(p+5*nc)) << 2)
-                + ((*(p-4*nc) + *(p+4*nc)) << 3)
-                + ((*(p-3*nc) + *(p+3*nc)) << 5)
-                + ((*(p-2*nc) + *(p+2*nc)) << 6)
-                + ((*(p-1*nc) + *(p+1*nc)) << 6)
-                + ((*p << 7));
-            //int sy = (*p)*FILTER[0];
-            //for (int i = 1; i < sizeof(FILTER); i++) {
-            //    sy += ((*p - (i * nc)) + (*p + (i * nc))) * FILTER[i];
-            //}
+            int sy = (*p)*FILTER[0];
+            for (int i = 1; i < sizeof(FILTER); i++) {
+                sy += ((*(p - (i * nc))) + (*(p + (i * nc)))) * FILTER[i];
+            }
             avgDxy[Index][r+c] = (sy >> 8);
 
             #if TEST_AVG_DERIV
